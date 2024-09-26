@@ -27,15 +27,12 @@ void set_pipe(int has_pipe, int *fd, int end)
 int	exec(char **argv, int i, char **envp)
 {
 	int has_pipe, fd[2], pid, status;
-
 	has_pipe = argv[i] && !strcmp(argv[i], "|");
 
 	if (!has_pipe && !strcmp(*argv, "cd"))
 		return cd(argv, i);
-
 	if (has_pipe && pipe(fd) == -1)
 		err("error: fatal\n"), exit(1);
-
 	if ((pid = fork()) == -1)
 		err("error: fatal\n"), exit(1);
 	if (!pid)
@@ -52,8 +49,9 @@ int	exec(char **argv, int i, char **envp)
 	return WIFEXITED(status) && WEXITSTATUS(status);
 }
 
-int main(int, char **argv, char **envp)
+int main(int argc, char **argv, char **envp)
 {
+	(void)argc;
 	int i = 0, status = 0;
 
 	while (argv[i])
