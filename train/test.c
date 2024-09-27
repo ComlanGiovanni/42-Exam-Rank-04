@@ -6,7 +6,7 @@
 /*   By: gicomlan <gicomlan@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/09/27 13:24:09 by gicomlan          #+#    #+#             */
-/*   Updated: 2024/09/27 19:16:09 by gicomlan         ###   ########.fr       */
+/*   Updated: 2024/09/27 22:04:44 by gicomlan         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -15,6 +15,7 @@
 #include <stdlib.h>	 // malloc, free, exit, EXIT_FAILURE, EXIT_SUCCESS
 #include <string.h>	 // strcmp
 #include <stdbool.h>	// bool, true, false
+#include <stdio.h> // Pour utiliser printf
 
 #define PIPE "|"
 #define SEMICOLON ";"
@@ -46,6 +47,47 @@ typedef struct s_micro_shell
 	int			prev_pipe_fd;
 	t_command	command;
 }	t_micro_shell;
+
+//debug
+static void ft_print_command(t_command *command)
+{
+	int index;
+
+	index = 0;
+	printf("Command Structure:\n");
+	printf("Type: ");
+	if (command->type == TYPE_NONE)
+		printf("TYPE_NONE\n");
+	else if (command->type == TYPE_PIPE)
+		printf("TYPE_PIPE\n");
+	else if (command->type == TYPE_SEMICOLON)
+		printf("TYPE_SEMICOLON\n");
+	else if (command->type == TYPE_CD)
+		printf("TYPE_CD\n");
+	else
+		printf("UNKNOWN\n");
+	printf("Arguments:\n");
+	if (command->arguments)
+	{
+		while (command->arguments[index])
+			printf("  arguments[%d]: %s\n", index, command->arguments[index++]);
+	}
+	else
+		printf("  No arguments\n");
+}
+
+//debug
+static void ft_print_micro_shell(t_micro_shell *shell)
+{
+	printf("Micro Shell Structure:\n");
+	printf("PID: %d\n", shell->pid);
+	printf("Argc: %d\n", shell->argc);
+	printf("Index: %d\n", shell->index);
+	printf("Exit Code: %d\n", shell->exit_code);
+	printf("Pipe FD: [%d, %d]\n", shell->pipe_fd[0], shell->pipe_fd[1]);
+	printf("Prev Pipe FD: %d\n", shell->prev_pipe_fd);
+	ft_print_command(&(shell->command));
+}
 
 static	size_t	ft_strlen(char *string)
 {
@@ -130,7 +172,10 @@ static void	ft_setup_pipe(t_micro_shell *shell)
 {
 	if (shell->command.type == TYPE_PIPE)
 		if (pipe(shell->pipe_fd) == -1)
+		{
+			perror("pipe");//debug
 			ft_fatal_error();
+		}
 }
 
 static void	ft_cannot_execute_commands(t_micro_shell *shell)
@@ -143,14 +188,16 @@ static void	ft_cannot_execute_commands(t_micro_shell *shell)
 
 static void	ft_execute_child_process(t_micro_shell *shell)
 {
-	if (shell->prev_pipe_fd != -1)
+	printf("In child process (PID: %d)\n", getpid());
+	ft_print_micro_shell(shell);
+	if (shell->prev_pipe_fd != -1)//here
 		if (dup2(shell->prev_pipe_fd, STDIN_FILENO) == -1)
 			ft_fatal_error();
 	if (shell->command.type == TYPE_PIPE)
 		if (dup2(shell->pipe_fd[STDOUT_FILENO], STDOUT_FILENO) == -1)
 			ft_fatal_error();
 	ft_close_fd(shell->prev_pipe_fd);
-	if (shell->command.type == TYPE_PIPE)
+	if (shell->command.type == TYPE_PIPE)//here
 	{
 		ft_close_fd(shell->pipe_fd[STDIN_FILENO]);
 		ft_close_fd(shell->pipe_fd[STDOUT_FILENO]);
@@ -159,10 +206,22 @@ static void	ft_execute_child_process(t_micro_shell *shell)
 		shell->command.arguments, shell->envp) == -1)
 		ft_cannot_execute_commands(shell);
 }
-
-static void	ft_execute_parent_process(t_micro_shell *shell)
+static void ft_execute_parent_process(t_micro_shell *shell)
 {
-	waitpid(shell->pid, NULL, 0);
+	int status;
+
+	if (waitpid(shell->pid, &status, 0) == -1)
+		ft_fatal_error();
+	if (WIFEXITED(status))
+	{
+		 printf("Child exited with status %d\n", WEXITSTATUS(status));//debug
+		shell->exit_code = WEXITSTATUS(status);
+	}
+	else
+	{
+		printf("Child terminated abnormally\n");//debug
+		shell->exit_code = EXIT_FAILURE;
+	}
 	ft_close_fd(shell->prev_pipe_fd);
 	if (shell->command.type == TYPE_PIPE)
 	{
@@ -172,6 +231,7 @@ static void	ft_execute_parent_process(t_micro_shell *shell)
 	else
 		shell->prev_pipe_fd = -1;
 }
+
 
 static int	ft_execute_external_command(t_micro_shell *shell)
 {
@@ -189,7 +249,7 @@ static int	ft_execute_external_command(t_micro_shell *shell)
 static void	ft_skip_semicolons(t_micro_shell *shell)
 {
 	while (shell->index < shell->argc && \
-		strcmp(shell->argv[shell->index], SEMICOLON) == 0)
+		strcmp(shell->argv[shell->index], SEMICOLON) == 0);
 		shell->index++;
 }
 
@@ -253,6 +313,7 @@ static void	ft_parse_arguments(t_micro_shell *shell)
 	else
 		shell->command.type = TYPE_NONE;
 	ft_check_if_cd(shell);
+	ft_print_micro_shell(shell);
 }
 
 static int	ft_execute_command(t_micro_shell *shell)
@@ -260,6 +321,8 @@ static int	ft_execute_command(t_micro_shell *shell)
 	int	exit_code;
 
 	exit_code = EXIT_FAILURE;
+	printf("Executing command...\n");//debug
+	ft_print_command(&(shell->command));//debug
 	if (shell->command.type == TYPE_CD)
 		exit_code = ft_execute_cd(shell->command.arguments);
 	else
@@ -279,11 +342,25 @@ static void	ft_initialize_micro_shell(t_micro_shell *shell, \
 	shell->command.type = TYPE_NONE;
 	shell->command.arguments = NULL;
 }
+/**
+ * @brief
+ *
+ * ./microshell /bin/echo "Hello, World!"
+ * ./microshell /bin/echo "First command" ";" /bin/echo "Second command"
+ * ./microshell /bin/echo "Line1\nLine2" "|" /usr/bin/grep "Line2"
+ * ./microshell cd /tmp ";" /bin/pwd
 
+ *
+ * @param argc
+ * @param argv
+ * @param envp
+ * @return int
+ */
 int	main(int argc, char **argv, char **envp)
 {
 	t_micro_shell	shell;
 
+	printf("Starting microshell...\n");//debug
 	ft_initialize_micro_shell(&shell, argc, argv, envp);
 	while (shell.index < shell.argc)
 	{
@@ -297,5 +374,6 @@ int	main(int argc, char **argv, char **envp)
 			shell.command.arguments = NULL;
 		}
 	}
+	printf("Microshell exited with code %d\n", shell.exit_code);//debug
 	return (shell.exit_code);
 }
