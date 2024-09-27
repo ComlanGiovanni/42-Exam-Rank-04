@@ -3,7 +3,7 @@ Expected files   : microshell.c
 Allowed functions: malloc, free, write, close, fork, waitpid, signal, kill, exit, chdir, execve, dup, dup2, pipe, strcmp, strncmp
 --------------------------------------------------------------------------------------
 
-Ecrire un programme qui aura ressemblera à un executeur de commande shell
+Ecrire un programme qui ressemblera à un executeur de commande shell
 - La ligne de commande à executer sera passer en argument du programme
 - Les executables seront appelés avec un chemin relatif ou absolut mais votre programme ne devra pas construire de chemin (en utilisant la variable d environment PATH par exemple)
 - Votre programme doit implementer "|" et ";" comme dans bash
