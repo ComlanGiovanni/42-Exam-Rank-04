@@ -6,7 +6,7 @@
 /*   By: gicomlan <gicomlan@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/09/28 12:22:04 by gicomlan          #+#    #+#             */
-/*   Updated: 2024/09/28 12:22:07 by gicomlan         ###   ########.fr       */
+/*   Updated: 2024/09/28 12:53:48 by gicomlan         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -490,6 +490,9 @@ static void ft_initialize_micro_shell(t_micro_shell *shell, int argc, char **arg
 	shell->type = TYPE_NONE;
 }
 
+/*
+clang -g3 -Wall -Werror -Wextra -o microshell microshell.c && valgrind --leak-check=full --show-leak-kinds=all --track-fds=yes --show-reachable=yes --track-origins=yes ./microshell
+*/
 int main(int argc, char **argv, char **envp)
 {
 	t_micro_shell shell;
