@@ -6,7 +6,7 @@
 /*   By: gicomlan <gicomlan@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/09/28 09:34:01 by gicomlan          #+#    #+#             */
-/*   Updated: 2024/09/28 11:45:22 by gicomlan         ###   ########.fr       */
+/*   Updated: 2024/09/28 12:12:04 by gicomlan         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -21,9 +21,6 @@
 #define PIPE "|"
 #define SEMICOLON ";"
 #define CHANGE_DIRECTORY "cd"
-
-// #define PIPE_INPUT 0
-// #define PIPE_OUTPUT 1
 
 typedef struct s_main_variable
 {
@@ -101,8 +98,6 @@ static void ft_close_fd(int fd, t_micro_shell *shell);
 //         printf("  No arguments\n");
 // }
 
-
-
 static void ft_cleanup(t_micro_shell *shell)
 {
     int index_arguments;
@@ -123,20 +118,6 @@ static void ft_cleanup(t_micro_shell *shell)
     ft_close_fd(shell->pipes.pipe_fd[PIPE_INPUT], shell);
     ft_close_fd(shell->pipes.pipe_fd[PIPE_OUTPUT], shell);
 }
-
-// static void ft_cleanup(t_micro_shell *shell)
-// {
-//     if (shell->arguments)
-//     {
-//         free(shell->arguments);
-//         shell->arguments = NULL;
-//     }
-//     // Close any open file descriptors
-//     ft_close_fd(shell->pipes.previous_pipe_fd, shell);
-//     ft_close_fd(shell->pipes.pipe_fd[PIPE_INPUT], shell);
-//     ft_close_fd(shell->pipes.pipe_fd[PIPE_OUTPUT], shell);
-// }
-
 
 size_t	ft_strlen(char *string)
 {
@@ -179,17 +160,6 @@ char	*ft_strdup(char *source)
 	return (duplicate_string);
 }
 
-// static size_t ft_strlen(char *string)
-// {
-//     size_t length = 0;
-// 	// const char end_of_string;
-//     if (!string)
-//         return (0);
-//     while (string[length] != '\0')
-//         length++;
-//     return (length);
-// }
-
 static void ft_putstr_fd(char *string, int fd)
 {
     if (!string)
@@ -198,48 +168,100 @@ static void ft_putstr_fd(char *string, int fd)
         write(fd, string, ft_strlen(string));
 }
 
-static void ft_print_error(char *message)
+// static void ft_error_message(char *message)
+// {
+//     ft_putstr_fd("error: ", STDERR_FILENO);
+//     ft_putstr_fd(message, STDERR_FILENO);
+// }
+
+// static void ft_exit_with_fatal_error(t_micro_shell *shell)
+// {
+//     ft_error_message("fatal\n");
+//     ft_cleanup(shell);
+//     exit(EXIT_FAILURE);
+// }
+
+
+// Affiche un message d'erreur avec un format uniforme
+static void ft_error_message(char *prefix, char *message, char *suffix)
 {
-    ft_putstr_fd("error: ", STDERR_FILENO);
-    ft_putstr_fd(message, STDERR_FILENO);
+    if (prefix)
+        ft_putstr_fd(prefix, STDERR_FILENO);
+    if (message)
+        ft_putstr_fd(message, STDERR_FILENO);
+    if (suffix)
+        ft_putstr_fd(suffix, STDERR_FILENO);
+    ft_putstr_fd("\n", STDERR_FILENO);
 }
 
-static void ft_fatal_error(t_micro_shell *shell)
+// Gestion d'une erreur fatale
+static void ft_exit_with_fatal_error(t_micro_shell *shell)
 {
-    ft_print_error("fatal\n");
+    ft_error_message("error: ", "fatal", NULL);
     ft_cleanup(shell);
     exit(EXIT_FAILURE);
 }
 
+// Gestion de l'erreur lors de l'exécution d'une commande
+static void ft_cannot_execute_commands(t_micro_shell *shell)
+{
+    ft_error_message("error: cannot execute ", shell->arguments[0], NULL);
+    ft_cleanup(shell);
+    exit(EXIT_FAILURE);
+}
+
+// Gestion de l'erreur pour la commande cd
 static int ft_execute_cd(char **arguments)
 {
+	//printf("Executing command...\n"); // Debug
+    //ft_print_micro_shell(shell);     // Debug
     if (!arguments[1] || arguments[2])
     {
-        ft_print_error("cd: bad arguments\n");
-        return (EXIT_FAILURE);
+        ft_error_message("error: ", "cd: bad arguments", NULL);
+        return EXIT_FAILURE;
     }
     if (chdir(arguments[1]) == -1)
     {
-        ft_print_error("cd: cannot change directory to ");
-        ft_putstr_fd(arguments[1], STDERR_FILENO);
-        ft_putstr_fd("\n", STDERR_FILENO);
-        return (EXIT_FAILURE);
+        ft_error_message("error: cd: cannot change directory to ", arguments[1], NULL);
+        return EXIT_FAILURE;
     }
-    return (EXIT_SUCCESS);
+    return EXIT_SUCCESS;
 }
 
-static void ft_free_fail_malloc_arguments(t_micro_shell *shell, char **cmd_arguments, int max_index)
+
+// static int ft_execute_cd(char **arguments)
+// {
+//     if (!arguments[1] || arguments[2])
+//     {
+//         ft_error_message("error: ", "cd: bad arguments\n", NULL);
+//         return (EXIT_FAILURE);
+//     }
+//     if (chdir(arguments[1]) == -1)
+//     {
+//         ft_error_message("error: ", "cd: cannot change directory to ", NULL);
+//         ft_putstr_fd(arguments[1], STDERR_FILENO);
+//         ft_putstr_fd("\n", STDERR_FILENO);
+//         return (EXIT_FAILURE);
+//     }
+//     return (EXIT_SUCCESS);
+// }
+
+
+// Libère la mémoire allouée pour les arguments
+static void ft_free_arguments(char **cmd_arguments, int max_index)
 {
-    while (max_index > 0)
-    {
-        free(cmd_arguments[max_index - 1]);
-        max_index--;
-    }
-    free(cmd_arguments);  // Correction ici
-    ft_print_error("Malloc arguments fail");
-    ft_fatal_error(shell);
+    int index;
+
+	index = 0;
+	while (index < max_index)
+	{
+		free(cmd_arguments[index]);
+		index++;
+	}
+    free(cmd_arguments);
 }
 
+// Récupère les arguments de la commande
 static char **ft_get_command_arguments(t_micro_shell *shell, int start, int end)
 {
     char    **cmd_arguments;
@@ -247,23 +269,41 @@ static char **ft_get_command_arguments(t_micro_shell *shell, int start, int end)
     int     cmd_length;
 
     if (start >= end)
-        return (NULL);
+        return NULL;
     cmd_length = end - start;
     cmd_arguments = (char **)malloc(sizeof(char *) * (cmd_length + 1));
     if (!cmd_arguments)
-        ft_fatal_error(shell);
+        ft_exit_with_fatal_error(shell);
     index = 0;
     while (start < end)
     {
         cmd_arguments[index] = ft_strdup(shell->main_vars.argv[start]);
         if (!cmd_arguments[index])
-            ft_free_fail_malloc_arguments(shell, cmd_arguments, index);
+        {
+			ft_error_message("error: ", "Malloc arguments fail", NULL);
+            ft_free_arguments(cmd_arguments, index);
+            ft_exit_with_fatal_error(shell);
+        }
         index++;
         start++;
     }
     cmd_arguments[index] = NULL;
-    return (cmd_arguments);
+    return cmd_arguments;
 }
+
+
+
+// static void ft_free_fail_malloc_arguments(t_micro_shell *shell, char **cmd_arguments, int max_index)
+// {
+//     while (max_index > 0)
+//     {
+//         free(cmd_arguments[max_index - 1]);
+//         max_index--;
+//     }
+//     free(cmd_arguments);  // Correction ici
+//     ft_error_message("Malloc arguments fail");
+//     ft_exit_with_fatal_error(shell);
+// }
 
 // static char **ft_get_command_arguments(t_micro_shell *shell, int start, int end)
 // {
@@ -271,16 +311,18 @@ static char **ft_get_command_arguments(t_micro_shell *shell, int start, int end)
 //     int     index;
 //     int     cmd_length;
 
-// 	if (start >= end)
-// 		return (NULL);
+//     if (start >= end)
+//         return (NULL);
 //     cmd_length = end - start;
 //     cmd_arguments = (char **)malloc(sizeof(char *) * (cmd_length + 1));
 //     if (!cmd_arguments)
-//         ft_fatal_error(shell);
+//         ft_exit_with_fatal_error(shell);
 //     index = 0;
 //     while (start < end)
 //     {
-//         cmd_arguments[index] = shell->main_vars.argv[start];
+//         cmd_arguments[index] = ft_strdup(shell->main_vars.argv[start]);
+//         if (!cmd_arguments[index])
+//             ft_free_fail_malloc_arguments(shell, cmd_arguments, index);
 //         index++;
 //         start++;
 //     }
@@ -293,28 +335,28 @@ static void ft_close_fd(int fd, t_micro_shell *shell)
     if (fd != -1 && close(fd) == -1)
 	{
 		//STDERR_FILENO //strerror(errno) //perror("close"); // Debug
-        ft_fatal_error(shell);
+        ft_exit_with_fatal_error(shell);
 	}
 }
 
-static void ft_setup_pipe(t_micro_shell *shell)
-{
-    if (shell->type == TYPE_PIPE)
-        if (pipe(shell->pipes.pipe_fd) == -1)
-        {
-            perror("pipe"); // Debug
-            ft_fatal_error(shell);
-        }
-}
+// static void ft_setup_pipe(t_micro_shell *shell)
+// {
+//     if (shell->type == TYPE_PIPE)
+//         if (pipe(shell->pipes.pipe_fd) == -1)
+//         {
+//             perror("pipe"); // Debug
+//             ft_exit_with_fatal_error(shell);
+//         }
+// }
 
-static void ft_cannot_execute_commands(t_micro_shell *shell)
-{
-    ft_print_error("cannot execute ");
-    ft_putstr_fd(shell->arguments[0], STDERR_FILENO);
-    ft_putstr_fd("\n", STDERR_FILENO);
-    ft_cleanup(shell);
-    exit(EXIT_FAILURE);
-}
+// static void ft_cannot_execute_commands(t_micro_shell *shell)
+// {
+//     ft_error_message("cannot execute ");
+//     ft_putstr_fd(shell->arguments[0], STDERR_FILENO);
+//     ft_putstr_fd("\n", STDERR_FILENO);
+//     ft_cleanup(shell);
+//     exit(EXIT_FAILURE);
+// }
 
 
 // Fonction dédiée pour rediriger les descripteurs de fichiers
@@ -325,7 +367,7 @@ static void ft_redirect_fds(t_micro_shell *shell)
         if (dup2(shell->pipes.previous_pipe_fd, PIPE_INPUT) == -1)
 		{
 			//STDERR_FILENO //strerror(errno) //perror("dup2"); // Debug
-            ft_fatal_error(shell);
+            ft_exit_with_fatal_error(shell);
 		}
 	}
     if (shell->type == TYPE_PIPE)
@@ -333,7 +375,7 @@ static void ft_redirect_fds(t_micro_shell *shell)
         if (dup2(shell->pipes.pipe_fd[PIPE_OUTPUT], PIPE_OUTPUT) == -1)
 		{
 			//STDERR_FILENO //strerror(errno) //perror("dup2"); // Debug
-            ft_fatal_error(shell);
+            ft_exit_with_fatal_error(shell);
 		}
 	}
 }
@@ -389,7 +431,7 @@ static void ft_execute_parent_process(t_micro_shell *shell)
     if (waitpid(shell->pid, &status, 0) == -1)
 	{
 		//STDERR_FILENO //strerror(errno) //perror("waitpid"); // Debug
-        ft_fatal_error(shell);
+        ft_exit_with_fatal_error(shell);
 	}
     // Utilisation de la fonction pour gérer le statut du processus enfant
     ft_handle_child_status(shell, status);
@@ -407,21 +449,59 @@ static void ft_execute_parent_process(t_micro_shell *shell)
 }
 
 
+
+// Prépare le pipe si nécessaire
+static void ft_prepare_pipe(t_micro_shell *shell)
+{
+    if (shell->type == TYPE_PIPE)
+    {
+        if (pipe(shell->pipes.pipe_fd) == -1)
+        {
+            ft_exit_with_fatal_error(shell);
+        }
+    }
+}
+
+// Fork le processus et retourne le PID
+static pid_t ft_fork_process(t_micro_shell *shell)
+{
+    pid_t pid;
+
+    pid = fork();
+    if (pid == -1)
+        ft_exit_with_fatal_error(shell);
+    return pid;
+}
+
+// Exécute la commande externe
 static int ft_execute_external_command(t_micro_shell *shell)
 {
-    ft_setup_pipe(shell);
-    shell->pid = fork();
-    if (shell->pid == -1)
-	{
-		//STDERR_FILENO //strerror(errno) //perror("fork");//debug
-        ft_fatal_error(shell);
-	}
+    ft_prepare_pipe(shell);
+    shell->pid = ft_fork_process(shell);
     if (shell->pid == 0)
         ft_execute_child_process(shell);
     else
         ft_execute_parent_process(shell);
-    return (EXIT_SUCCESS);
+    return EXIT_SUCCESS;
 }
+
+
+
+// static int ft_execute_external_command(t_micro_shell *shell)
+// {
+//     ft_setup_pipe(shell);
+//     shell->pid = fork();
+//     if (shell->pid == -1)
+// 	{
+// 		//STDERR_FILENO //strerror(errno) //perror("fork");//debug
+//         ft_exit_with_fatal_error(shell);
+// 	}
+//     if (shell->pid == 0)
+//         ft_execute_child_process(shell);
+//     else
+//         ft_execute_parent_process(shell);
+//     return (EXIT_SUCCESS);
+// }
 
 static void ft_skip_semicolons(t_micro_shell *shell)
 {
