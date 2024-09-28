@@ -1,12 +1,12 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   fast.c                                             :+:      :+:    :+:   */
+/*   short.c                                            :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: gicomlan <gicomlan@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/09/28 09:21:24 by gicomlan          #+#    #+#             */
-/*   Updated: 2024/09/28 09:22:40 by gicomlan         ###   ########.fr       */
+/*   Updated: 2024/09/28 12:23:44 by gicomlan         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -26,7 +26,7 @@ void ft_print_error(char *msg)
 int ft_execute_cd(char **arg, int arg_count)
 {
 	if (arg_count != 2)
-		return (ft_print_error("error: cd: bad arg\n"), 1);
+		return (ft_print_error("error: cd: bad arguments\n"), 1);
 	if (chdir(arg[1]) == -1)
 		return (ft_print_error("error: cd: cannot change directory to "), \
 			ft_print_error(arg[1]), ft_print_error("\n"), 1);
