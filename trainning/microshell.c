@@ -6,7 +6,7 @@
 /*   By: gicomlan <gicomlan@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/09/28 09:34:01 by gicomlan          #+#    #+#             */
-/*   Updated: 2024/09/28 11:00:49 by gicomlan         ###   ########.fr       */
+/*   Updated: 2024/09/28 11:39:16 by gicomlan         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -22,6 +22,9 @@
 #define SEMICOLON ";"
 #define CHANGE_DIRECTORY "cd"
 
+// #define PIPE_INPUT 0
+// #define PIPE_OUTPUT 1
+
 typedef struct s_main_variable
 {
     char    **argv;
@@ -32,7 +35,7 @@ typedef struct s_main_variable
 typedef struct s_pipe
 {
     int     pipe_fd[2];
-    int     prev_pipe_fd;
+    int     previous_pipe_fd;
 }   t_pipe;
 
 typedef enum e_command_type
@@ -42,6 +45,12 @@ typedef enum e_command_type
     TYPE_SEMICOLON,
     TYPE_CD
 }   t_command_type;
+
+typedef enum e_pipe_fd
+{
+	PIPE_INPUT = 0,
+	PIPE_OUTPUT = 1
+}   t_pipe_fd;
 
 typedef struct s_micro_shell
 {
@@ -67,7 +76,7 @@ static void ft_close_fd(int fd, t_micro_shell *shell);
 //     printf("Index: %d\n", shell->index);
 //     printf("Exit Code: %d\n", shell->exit_code);
 //     printf("Pipe FD: [%d, %d]\n", shell->pipes.pipe_fd[0], shell->pipes.pipe_fd[1]);
-//     printf("Prev Pipe FD: %d\n", shell->pipes.prev_pipe_fd);
+//     printf("Prev Pipe FD: %d\n", shell->pipes.previous_pipe_fd);
 //     printf("Type: ");
 //     if (shell->type == TYPE_NONE)
 //         printf("TYPE_NONE\n");
@@ -92,31 +101,94 @@ static void ft_close_fd(int fd, t_micro_shell *shell);
 //         printf("  No arguments\n");
 // }
 
+
+
 static void ft_cleanup(t_micro_shell *shell)
 {
+    int index_arguments;
+
     if (shell->arguments)
     {
+        index_arguments = 0;
+        while (shell->arguments[index_arguments])
+        {
+            free(shell->arguments[index_arguments]);
+            index_arguments++;
+        }
         free(shell->arguments);
         shell->arguments = NULL;
     }
     // Close any open file descriptors
-    ft_close_fd(shell->pipes.prev_pipe_fd, shell);
-    ft_close_fd(shell->pipes.pipe_fd[STDIN_FILENO], shell);
-    ft_close_fd(shell->pipes.pipe_fd[STDOUT_FILENO], shell);
+    ft_close_fd(shell->pipes.previous_pipe_fd, shell);
+    ft_close_fd(shell->pipes.pipe_fd[PIPE_INPUT], shell);
+    ft_close_fd(shell->pipes.pipe_fd[PIPE_OUTPUT], shell);
 }
 
+// static void ft_cleanup(t_micro_shell *shell)
+// {
+//     if (shell->arguments)
+//     {
+//         free(shell->arguments);
+//         shell->arguments = NULL;
+//     }
+//     // Close any open file descriptors
+//     ft_close_fd(shell->pipes.previous_pipe_fd, shell);
+//     ft_close_fd(shell->pipes.pipe_fd[PIPE_INPUT], shell);
+//     ft_close_fd(shell->pipes.pipe_fd[PIPE_OUTPUT], shell);
+// }
 
 
-static size_t ft_strlen(char *string)
+size_t	ft_strlen(char *string)
 {
-    size_t length = 0;
-	// const char end_of_string;
-    if (!string)
-        return (0);
-    while (string[length] != '\0')
-        length++;
-    return (length);
+	const char	*last_char_in_string;
+
+	if (!string)
+		return (0x0);
+	last_char_in_string = string;
+	while (*last_char_in_string)
+		last_char_in_string++;
+	return (last_char_in_string - string);
 }
+
+
+static char	*ft_strcpy(char *destination, char *source)
+{
+	size_t	index;
+
+	index = 0x0;
+	while (source[index] != '\0')
+	{
+		destination[index] = source[index];
+		index++;
+	}
+	destination[index] = '\0';
+	return (destination);
+}
+
+char	*ft_strdup(char *source)
+{
+	size_t	length_source;
+	char	*duplicate_string;
+
+	duplicate_string = NULL;
+	length_source = ft_strlen(source);
+	duplicate_string = (char *)malloc(sizeof(char) * (length_source + 0x1));
+	if (duplicate_string == NULL)
+		return (NULL);
+	ft_strcpy(duplicate_string, source);
+	return (duplicate_string);
+}
+
+// static size_t ft_strlen(char *string)
+// {
+//     size_t length = 0;
+// 	// const char end_of_string;
+//     if (!string)
+//         return (0);
+//     while (string[length] != '\0')
+//         length++;
+//     return (length);
+// }
 
 static void ft_putstr_fd(char *string, int fd)
 {
@@ -156,14 +228,53 @@ static int ft_execute_cd(char **arguments)
     return (EXIT_SUCCESS);
 }
 
+static void ft_free_fail_malloc_arguments(t_micro_shell *shell, char **cmd_arguments, int max_index)
+{
+    while (max_index > 0)
+    {
+        free(cmd_arguments[max_index - 1]);
+        max_index--;
+    }
+    free(cmd_arguments);  // Correction ici
+    ft_print_error("Malloc arguments fail");
+    ft_fatal_error(shell);
+}
+
 static char **ft_get_command_arguments(t_micro_shell *shell, int start, int end)
 {
     char    **cmd_arguments;
     int     index;
+    int     cmd_length;
+
+    if (start >= end)
+        return (NULL);
+    cmd_length = end - start;
+    cmd_arguments = (char **)malloc(sizeof(char *) * (cmd_length + 1));
+    if (!cmd_arguments)
+        ft_fatal_error(shell);
+    index = 0;
+    while (start < end)
+    {
+        cmd_arguments[index] = ft_strdup(shell->main_vars.argv[start]);
+        if (!cmd_arguments[index])
+            ft_free_fail_malloc_arguments(shell, cmd_arguments, index);
+        index++;
+        start++;
+    }
+    cmd_arguments[index] = NULL;
+    return (cmd_arguments);
+}
+
+static char **ft_get_command_arguments(t_micro_shell *shell, int start, int end)
+{
+    char    **cmd_arguments;
+    int     index;
+    int     cmd_length;
 
 	if (start >= end)
 		return (NULL);
-    cmd_arguments = (char **)malloc(sizeof(char *) * (end - start + 1));
+    cmd_length = end - start;
+    cmd_arguments = (char **)malloc(sizeof(char *) * (cmd_length + 1));
     if (!cmd_arguments)
         ft_fatal_error(shell);
     index = 0;
@@ -214,9 +325,9 @@ static void ft_cannot_execute_commands(t_micro_shell *shell)
 // Fonction dédiée pour rediriger les descripteurs de fichiers
 static void ft_redirect_fds(t_micro_shell *shell)
 {
-    if (shell->pipes.prev_pipe_fd != -1)
+    if (shell->pipes.previous_pipe_fd != -1)
     {
-        if (dup2(shell->pipes.prev_pipe_fd, STDIN_FILENO) == -1)
+        if (dup2(shell->pipes.previous_pipe_fd, PIPE_INPUT) == -1)
 		{
 			//STDERR_FILENO //strerror(errno) //perror("dup2"); // Debug
             ft_fatal_error(shell);
@@ -224,7 +335,7 @@ static void ft_redirect_fds(t_micro_shell *shell)
 	}
     if (shell->type == TYPE_PIPE)
     {
-        if (dup2(shell->pipes.pipe_fd[STDOUT_FILENO], STDOUT_FILENO) == -1)
+        if (dup2(shell->pipes.pipe_fd[PIPE_OUTPUT], PIPE_OUTPUT) == -1)
 		{
 			//STDERR_FILENO //strerror(errno) //perror("dup2"); // Debug
             ft_fatal_error(shell);
@@ -235,11 +346,11 @@ static void ft_redirect_fds(t_micro_shell *shell)
 // Fonction dédiée pour fermer les descripteurs de fichiers du processus enfant
 static void ft_close_child_fds(t_micro_shell *shell)
 {
-    ft_close_fd(shell->pipes.prev_pipe_fd, shell);
+    ft_close_fd(shell->pipes.previous_pipe_fd, shell);
     if (shell->type == TYPE_PIPE)
     {
-        ft_close_fd(shell->pipes.pipe_fd[STDIN_FILENO], shell);
-        ft_close_fd(shell->pipes.pipe_fd[STDOUT_FILENO], shell);
+        ft_close_fd(shell->pipes.pipe_fd[PIPE_INPUT], shell);
+        ft_close_fd(shell->pipes.pipe_fd[PIPE_OUTPUT], shell);
     }
 }
 
@@ -288,15 +399,15 @@ static void ft_execute_parent_process(t_micro_shell *shell)
     // Utilisation de la fonction pour gérer le statut du processus enfant
     ft_handle_child_status(shell, status);
 
-    ft_close_fd(shell->pipes.prev_pipe_fd, shell);
+    ft_close_fd(shell->pipes.previous_pipe_fd, shell);
     if (shell->type == TYPE_PIPE)
     {
-        ft_close_fd(shell->pipes.pipe_fd[STDOUT_FILENO], shell);
-        shell->pipes.prev_pipe_fd = shell->pipes.pipe_fd[STDIN_FILENO];
+        ft_close_fd(shell->pipes.pipe_fd[PIPE_OUTPUT], shell);
+        shell->pipes.previous_pipe_fd = shell->pipes.pipe_fd[PIPE_INPUT];
     }
     else
     {
-        shell->pipes.prev_pipe_fd = -1;
+        shell->pipes.previous_pipe_fd = -1;
     }
 }
 
@@ -407,9 +518,9 @@ static void ft_initialize_micro_shell(t_micro_shell *shell, int argc, char **arg
     shell->main_vars.env = envp;
     shell->main_vars.argc = argc;
     shell->index = 1;
-    shell->pipes.pipe_fd[STDIN_FILENO] = -1;
-    shell->pipes.pipe_fd[STDOUT_FILENO] = -1;
-    shell->pipes.prev_pipe_fd = -1;
+    shell->pipes.pipe_fd[PIPE_INPUT] = -1;
+    shell->pipes.pipe_fd[PIPE_OUTPUT] = -1;
+    shell->pipes.previous_pipe_fd = -1;
     shell->exit_code = EXIT_SUCCESS;
     shell->arguments = NULL;
     shell->type = TYPE_NONE;
