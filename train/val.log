@@ -1,55 +1,173 @@
-==3550669== Memcheck, a memory error detector
-==3550669== Copyright (C) 2002-2017, and GNU GPL'd, by Julian Seward et al.
-==3550669== Using Valgrind-3.18.1 and LibVEX; rerun with -h for copyright info
-==3550669== Command: ./microshell /bin/ls | /usr/bin/grep microshell ; /bin/echo i\ love\ my\ microshell
-==3550669== 
-==3550672== Conditional jump or move depends on uninitialised value(s)
-==3550672==    at 0x40130F: ft_child_process (train.c:81)
-==3550672==    by 0x401554: ft_run_command (train.c:126)
-==3550672==    by 0x40165A: main (train.c:156)
-==3550672==  Uninitialised value was created by a stack allocation
-==3550672==    at 0x4015A0: main (train.c:136)
-==3550672== 
-==3550669== Conditional jump or move depends on uninitialised value(s)
-==3550669==    at 0x4014B5: ft_parent_process (train.c:108)
-==3550669==    by 0x40156B: ft_run_command (train.c:128)
-==3550669==    by 0x40165A: main (train.c:156)
-==3550669==  Uninitialised value was created by a stack allocation
-==3550669==    at 0x4015A0: main (train.c:136)
-==3550669== 
-==3550669== Syscall param exit_group(status) contains uninitialised byte(s)
-==3550669==    at 0x495EC31: _Exit (_exit.c:30)
-==3550669==    by 0x48B9551: __run_exit_handlers (exit.c:136)
-==3550669==    by 0x48B960F: exit (exit.c:143)
-==3550669==    by 0x489DD96: (below main) (libc_start_call_main.h:74)
-==3550669==  Uninitialised value was created by a stack allocation
-==3550669==    at 0x4015A0: main (train.c:136)
-==3550669== 
-==3550669== 
-==3550669== FILE DESCRIPTORS: 8 open (3 std) at exit.
-==3550669== Open file descriptor 3:
-==3550669==    at 0x498907D: pipe (pipe.c:29)
-==3550669==    by 0x401508: ft_run_command (train.c:120)
-==3550669==    by 0x40165A: main (train.c:156)
-==3550669== 
-==3550669== Open file descriptor 103: /usr/share/code/v8_context_snapshot.bin
-==3550669==    <inherited from parent>
-==3550669== 
-==3550669== Open file descriptor 40: /dev/ptmx
-==3550669==    <inherited from parent>
-==3550669== 
-==3550669== Open file descriptor 39: /home/gicomlan/.config/Code/logs/20240927T144214/ptyhost.log
-==3550669==    <inherited from parent>
-==3550669== 
-==3550669== Open file descriptor 38: /usr/share/code/resources/app/node_modules.asar
-==3550669==    <inherited from parent>
-==3550669== 
-==3550669== 
-==3550669== HEAP SUMMARY:
-==3550669==     in use at exit: 0 bytes in 0 blocks
-==3550669==   total heap usage: 0 allocs, 0 frees, 0 bytes allocated
-==3550669== 
-==3550669== All heap blocks were freed -- no leaks are possible
-==3550669== 
-==3550669== For lists of detected and suppressed errors, rerun with: -s
-==3550669== ERROR SUMMARY: 2 errors from 2 contexts (suppressed: 0 from 0)
+==174369== Memcheck, a memory error detector
+==174369== Copyright (C) 2002-2017, and GNU GPL'd, by Julian Seward et al.
+==174369== Using Valgrind-3.18.1 and LibVEX; rerun with -h for copyright info
+==174369== Command: ./microshell /bin/ls | /usr/bin/grep microshell ; /bin/echo i\ love\ my\ microshell
+==174369== 
+==174369== Conditional jump or move depends on uninitialised value(s)
+==174369==    at 0x48EAAD6: __vfprintf_internal (vfprintf-internal.c:1516)
+==174369==    by 0x48D479E: printf (printf.c:33)
+==174369==    by 0x4017EB: ft_print_micro_shell (train.c:50)
+==174369==    by 0x40143F: ft_parse_arguments (train.c:297)
+==174369==    by 0x401272: main (train.c:338)
+==174369==  Uninitialised value was created by a stack allocation
+==174369==    at 0x401210: main (train.c:329)
+==174369== 
+==174369== Use of uninitialised value of size 8
+==174369==    at 0x48CE2EB: _itoa_word (_itoa.c:177)
+==174369==    by 0x48E9ABD: __vfprintf_internal (vfprintf-internal.c:1516)
+==174369==    by 0x48D479E: printf (printf.c:33)
+==174369==    by 0x4017EB: ft_print_micro_shell (train.c:50)
+==174369==    by 0x40143F: ft_parse_arguments (train.c:297)
+==174369==    by 0x401272: main (train.c:338)
+==174369==  Uninitialised value was created by a stack allocation
+==174369==    at 0x401210: main (train.c:329)
+==174369== 
+==174369== Conditional jump or move depends on uninitialised value(s)
+==174369==    at 0x48CE2FC: _itoa_word (_itoa.c:177)
+==174369==    by 0x48E9ABD: __vfprintf_internal (vfprintf-internal.c:1516)
+==174369==    by 0x48D479E: printf (printf.c:33)
+==174369==    by 0x4017EB: ft_print_micro_shell (train.c:50)
+==174369==    by 0x40143F: ft_parse_arguments (train.c:297)
+==174369==    by 0x401272: main (train.c:338)
+==174369==  Uninitialised value was created by a stack allocation
+==174369==    at 0x401210: main (train.c:329)
+==174369== 
+==174369== Conditional jump or move depends on uninitialised value(s)
+==174369==    at 0x48EA5C3: __vfprintf_internal (vfprintf-internal.c:1516)
+==174369==    by 0x48D479E: printf (printf.c:33)
+==174369==    by 0x4017EB: ft_print_micro_shell (train.c:50)
+==174369==    by 0x40143F: ft_parse_arguments (train.c:297)
+==174369==    by 0x401272: main (train.c:338)
+==174369==  Uninitialised value was created by a stack allocation
+==174369==    at 0x401210: main (train.c:329)
+==174369== 
+==174369== Conditional jump or move depends on uninitialised value(s)
+==174369==    at 0x48E9C05: __vfprintf_internal (vfprintf-internal.c:1516)
+==174369==    by 0x48D479E: printf (printf.c:33)
+==174369==    by 0x4017EB: ft_print_micro_shell (train.c:50)
+==174369==    by 0x40143F: ft_parse_arguments (train.c:297)
+==174369==    by 0x401272: main (train.c:338)
+==174369==  Uninitialised value was created by a stack allocation
+==174369==    at 0x401210: main (train.c:329)
+==174369== 
+==174369== Conditional jump or move depends on uninitialised value(s)
+==174369==    at 0x48EAAD6: __vfprintf_internal (vfprintf-internal.c:1516)
+==174369==    by 0x48D479E: printf (printf.c:33)
+==174369==    by 0x4017EB: ft_print_micro_shell (train.c:50)
+==174369==    by 0x40147C: ft_execute_command (train.c:306)
+==174369==    by 0x401286: main (train.c:341)
+==174369==  Uninitialised value was created by a stack allocation
+==174369==    at 0x401210: main (train.c:329)
+==174369== 
+==174369== Conditional jump or move depends on uninitialised value(s)
+==174369==    at 0x48EA5C3: __vfprintf_internal (vfprintf-internal.c:1516)
+==174369==    by 0x48D479E: printf (printf.c:33)
+==174369==    by 0x4017EB: ft_print_micro_shell (train.c:50)
+==174369==    by 0x40147C: ft_execute_command (train.c:306)
+==174369==    by 0x401286: main (train.c:341)
+==174369==  Uninitialised value was created by a stack allocation
+==174369==    at 0x401210: main (train.c:329)
+==174369== 
+==174369== Conditional jump or move depends on uninitialised value(s)
+==174369==    at 0x48E9C05: __vfprintf_internal (vfprintf-internal.c:1516)
+==174369==    by 0x48D479E: printf (printf.c:33)
+==174369==    by 0x4017EB: ft_print_micro_shell (train.c:50)
+==174369==    by 0x40147C: ft_execute_command (train.c:306)
+==174369==    by 0x401286: main (train.c:341)
+==174369==  Uninitialised value was created by a stack allocation
+==174369==    at 0x401210: main (train.c:329)
+==174369== 
+microshell
+i love my microshell
+Starting microshell...
+Micro Shell Structure:
+PID: 0
+Argc: 8
+Index: 3
+Exit Code: 0
+Pipe FD: [-1, -1]
+Prev Pipe FD: -1
+Type: TYPE_PIPE
+Arguments:
+  arguments[0]: /bin/ls
+Executing command...
+Micro Shell Structure:
+PID: 0
+Argc: 8
+Index: 3
+Exit Code: 0
+Pipe FD: [-1, -1]
+Prev Pipe FD: -1
+Type: TYPE_PIPE
+Arguments:
+  arguments[0]: /bin/ls
+Child exited with status 0
+Micro Shell Structure:
+PID: 174392
+Argc: 8
+Index: 6
+Exit Code: 0
+Pipe FD: [3, 4]
+Prev Pipe FD: 3
+Type: TYPE_SEMICOLON
+Arguments:
+  arguments[0]: /usr/bin/grep
+  arguments[1]: microshell
+Executing command...
+Micro Shell Structure:
+PID: 174392
+Argc: 8
+Index: 6
+Exit Code: 0
+Pipe FD: [3, 4]
+Prev Pipe FD: 3
+Type: TYPE_SEMICOLON
+Arguments:
+  arguments[0]: /usr/bin/grep
+  arguments[1]: microshell
+Child exited with status 0
+Micro Shell Structure:
+PID: 174393
+Argc: 8
+Index: 8
+Exit Code: 0
+Pipe FD: [3, 4]
+Prev Pipe FD: -1
+Type: TYPE_NONE
+Arguments:
+  arguments[0]: /bin/echo
+  arguments[1]: i love my microshell
+Executing command...
+Micro Shell Structure:
+PID: 174393
+Argc: 8
+Index: 8
+Exit Code: 0
+Pipe FD: [3, 4]
+Prev Pipe FD: -1
+Type: TYPE_NONE
+Arguments:
+  arguments[0]: /bin/echo
+  arguments[1]: i love my microshell
+Child exited with status 0
+Microshell exited with code 0
+==174369== 
+==174369== FILE DESCRIPTORS: 6 open (3 std) at exit.
+==174369== Open file descriptor 103: /usr/share/code/v8_context_snapshot.bin
+==174369==    <inherited from parent>
+==174369== 
+==174369== Open file descriptor 39: /home/gicomlan/.config/Code/logs/20240928T072628/ptyhost.log
+==174369==    <inherited from parent>
+==174369== 
+==174369== Open file descriptor 38: /usr/share/code/resources/app/node_modules.asar
+==174369==    <inherited from parent>
+==174369== 
+==174369== 
+==174369== HEAP SUMMARY:
+==174369==     in use at exit: 0 bytes in 0 blocks
+==174369==   total heap usage: 4 allocs, 4 frees, 4,160 bytes allocated
+==174369== 
+==174369== All heap blocks were freed -- no leaks are possible
+==174369== 
+==174369== For lists of detected and suppressed errors, rerun with: -s
+==174369== ERROR SUMMARY: 10 errors from 8 contexts (suppressed: 0 from 0)
